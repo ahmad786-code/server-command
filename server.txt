@@ -1,0 +1,291 @@
+// const express = require("express");
+// const http = require("http");
+// const cors = require("cors");
+// const { Server } = require("socket.io");
+
+// const app = express();
+// const server = http.createServer(app);
+
+// // Enable CORS
+// app.use(cors());
+
+// const io = new Server(server, {
+//   cors: {
+//     origin: "*", // Allow all origins for testing
+//     methods: ["GET", "POST"],
+//   },
+// });
+
+// io.on("connection", (socket) => {
+//   console.log("Client connected to server:", socket.id);
+
+//   socket.on("admin-command", (command) => {
+//     console.log(`Admin command received: ${command}`);
+//     io.emit("camera-command", command); // Broadcast to all clients
+//   });
+
+//   // Handle camera stream
+//   socket.on("camera-stream", (frame) => {
+//     io.emit("camera-frame", frame); // Broadcast the frame to all connected clients
+//   });
+// });
+
+// // io.on("connection", (socket) => {
+// //   console.log("Client connected to server:", socket.id);
+
+// //   socket.on("admin-command", (command) => {
+// //     console.log(`Admin command received: ${command}`);
+// //     io.emit("camera-command", command); // Broadcast to all clients
+// //   });
+// // });
+
+// const PORT = 8000;
+// server.listen(PORT, () => {
+//   console.log(`Server running at http://localhost:${PORT}`);
+// });
+
+
+
+// const express = require("express");
+// const { Server } = require("socket.io");
+// const http = require("http");
+// const cors = require("cors");
+
+// const app = express();
+// app.use(cors());
+// const server = http.createServer(app);
+// const io = new Server(server);
+
+// let connectedPCs = {}; // Store connected PCs and their streams
+
+// io.on("connection", (socket) => {
+//   console.log("PC connected:", socket.id);
+
+//   // Register a PC
+//   socket.on("register-pc", (pcId) => {
+//     connectedPCs[pcId] = socket.id; // Map PC ID to socket ID
+//     console.log(`PC registered: ${pcId}`);
+//     io.emit("update-pc-list", Object.keys(connectedPCs)); // Notify admin of new PC
+//   });
+
+//   // Handle incoming frames
+//   socket.on("camera-stream", ({ pcId, frame }) => {
+//     io.emit("camera-frame", { pcId, frame }); // Broadcast frame to admin panel
+//   });
+
+//   // Handle PC disconnect
+//   socket.on("disconnect", () => {
+//     const pcId = Object.keys(connectedPCs).find((id) => connectedPCs[id] === socket.id);
+//     if (pcId) {
+//       delete connectedPCs[pcId]; // Remove disconnected PC
+//       console.log(`PC disconnected: ${pcId}`);
+//       io.emit("update-pc-list", Object.keys(connectedPCs)); // Notify admin
+//     }
+//   });
+
+//   // Handle manual disconnect
+//   socket.on("disconnect-pc", (pcId) => {
+//     delete connectedPCs[pcId];
+//     io.emit("update-pc-list", Object.keys(connectedPCs)); // Notify admin
+//   });
+// });
+
+// server.listen(8000, () => {
+//   console.log("Server running on http://localhost:8000");
+// });
+/*  
+const express = require("express");
+const { Server } = require("socket.io");
+const http = require("http");
+const cors = require("cors");
+
+const app = express();
+app.use(cors()); // Apply CORS to Express routes
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allow admin panel's origin
+    methods: ["GET", "POST"], // Allow these methods
+    credentials: true, // If you are using cookies/authentication
+  },
+});
+
+let connectedPCs = {}; // Store connected PCs and their streams
+
+// io.on("connection", (socket) => {
+//   console.log("PC connected:", socket.id);
+
+  // Register a PC
+  // socket.on("register-pc", (pcId) => {
+  //   connectedPCs[pcId] = socket.id; // Map PC ID to socket ID
+  //   console.log(`PC registered: ${pcId}`);
+  //   io.emit("update-pc-list", Object.keys(connectedPCs)); // Notify admin of new PC
+  // });
+
+//   socket.on("register-pc", (pcId) => {
+//     connectedPCs[pcId] = socket.id; // Map PC ID to socket ID
+//     console.log(`PC registered: ${pcId}`);
+//     console.log("Current connected PCs:", Object.keys(connectedPCs));
+    
+//     io.emit("update-pc-list", Object.keys(connectedPCs)); // Notify admin
+//   });
+  
+
+//   // Handle incoming frames
+//   socket.on("camera-stream", ({ pcId, frame }) => {
+//     io.emit("camera-frame", { pcId, frame }); // Broadcast frame to admin panel
+//   });
+
+//   // Handle PC disconnect
+//   socket.on("disconnect", () => {
+//     const pcId = Object.keys(connectedPCs).find((id) => connectedPCs[id] === socket.id);
+//     if (pcId) {
+//       delete connectedPCs[pcId]; // Remove disconnected PC
+//       console.log(`PC disconnected: ${pcId}`);
+//       io.emit("update-pc-list", Object.keys(connectedPCs)); // Notify admin
+//     }
+//   });
+
+//   // Handle manual disconnect
+//   socket.on("disconnect-pc", (pcId) => {
+//     delete connectedPCs[pcId];
+//     io.emit("update-pc-list", Object.keys(connectedPCs)); // Notify admin
+//   });
+// });
+
+
+io.on("connection", (socket) => {
+  console.log("PC connected:", socket.id);
+  
+  // Register PC
+  // socket.on("register-pc", (pcId, callback) => {
+  //   connectedPCs[pcId] = socket.id;
+  //   console.log(`PC registered: ${pcId}`);
+  //   console.log("Current connected PCs:", Object.keys(connectedPCs));
+    
+  //   // Emit updated list of connected PCs to the admin
+  //   io.emit("update-pc-list", Object.keys(connectedPCs));
+  // });
+  socket.on("register-pc", (pcId, callback) => {
+    connectedPCs[pcId] = socket.id;
+    console.log(`PC registered: ${pcId}`);
+    console.log("Current connected PCs:", Object.keys(connectedPCs));
+    
+    io.emit("update-pc-list", Object.keys(connectedPCs));
+    
+    // Send acknowledgment
+    if (callback) callback({ success: true });
+  });
+  
+
+  // Handle incoming frames (camera stream)
+  socket.on("camera-stream", ({ pcId, frame }) => {
+    io.emit("camera-frame", { pcId, frame });
+  });
+
+  // Handle disconnect
+  socket.on("disconnect", () => {
+    const pcId = Object.keys(connectedPCs).find(id => connectedPCs[id] === socket.id);
+    if (pcId) {
+      delete connectedPCs[pcId];
+      console.log(`PC disconnected: ${pcId}`);
+      io.emit("update-pc-list", Object.keys(connectedPCs)); // Emit updated list
+    }
+  });
+
+  socket.on("disconnect-pc", (pcId) => {
+    delete connectedPCs[pcId];
+    io.emit("update-pc-list", Object.keys(connectedPCs)); // Emit updated list
+  });
+});
+
+server.listen(8000, () => {
+  console.log("Server running on http://localhost:8000");
+});
+ */
+
+const express = require("express");
+const { Server } = require("socket.io");
+const http = require("http");
+const cors = require("cors");
+
+const app = express();
+app.use(cors()); // Enable CORS for all routes
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allow all origins (modify for production)
+    methods: ["GET", "POST"],
+    credentials: true, // Allow cookies if needed
+  },
+});
+
+let connectedPCs = {}; // Store connected PCs and their streams
+
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  // Handle PC registration
+  socket.on("register-pc", (pcId, callback) => {
+    connectedPCs[pcId] = socket.id;
+    console.log(`PC registered: ${pcId}`);
+    console.log("Current connected PCs:", Object.keys(connectedPCs));
+
+    // Notify admin of the new PC list
+    io.emit("update-pc-list", Object.keys(connectedPCs));
+
+    // Send acknowledgment back to the PC
+    if (callback) callback({ success: true });
+  });
+
+  // Handle incoming camera frames
+  socket.on("camera-stream", ({ pcId, frame }) => {
+    if (connectedPCs[pcId]) {
+      io.emit("camera-frame", { pcId, frame }); // Broadcast frame to all admins
+    } else {
+      console.error(`Unregistered PC tried to stream: ${pcId}`);
+    }
+  });
+
+  // Handle disconnect
+  socket.on("disconnect", () => {
+    const pcId = Object.keys(connectedPCs).find(
+      (id) => connectedPCs[id] === socket.id
+    );
+    if (pcId) {
+      delete connectedPCs[pcId];
+      console.log(`PC disconnected: ${pcId}`);
+      io.emit("update-pc-list", Object.keys(connectedPCs)); // Notify admins
+    }
+  });
+
+  // Manual PC disconnect 
+  socket.on("disconnect-pc", (pcId) => {
+    if (connectedPCs[pcId]) {
+      delete connectedPCs[pcId];
+      console.log(`PC manually disconnected: ${pcId}`);
+      io.emit("update-pc-list", Object.keys(connectedPCs)); // Notify admins
+    }
+  });
+
+  // Admin requests the current list of connected PCs
+  socket.on("get-connected-pcs", () => {
+    socket.emit("update-pc-list", Object.keys(connectedPCs));
+  });
+
+  // Admin requests camera control commands
+  socket.on("request-camera", (pcId) => {
+    const targetSocketId = connectedPCs[pcId];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("camera-command", "open"); // Command PC to start camera
+    } else {
+      console.error(`PC not found for camera request: ${pcId}`);
+    }
+  });
+});
+
+server.listen(8000, () => {
+  console.log("Server running on http://localhost:8000");
+});
